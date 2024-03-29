@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container-fluid">
+    <h1> Witaj użytkowniku </h1>
+    
+    {% if user %}
+        <p>Twoje dane:</p>
+        <ul>
+            <li><strong>Login:</strong> {{ user.login }}</li>
+            <li><strong>Email:</strong> {{ user.email }}</li>
+            <li><strong>Salt hasła:</strong> {{ user.salt }}</li>
+        </ul>
+        <a href="{{ url_for('delete',user_id=user.id) }}">Usuń Konto</a>
+        <br>
+        <a href="{{ url_for('change',user_id=user.id) }}">Zmień login lub email lub hasło</a>
+    {% else %}
+        <p> Nie ma żadnych informacji, prawdopodobnie coś poszło nie tak.</p>
+    {% endif %}
+</div>
+{% endblock %}
