@@ -11,9 +11,9 @@
             <li><strong>Email:</strong> {{ user.email }}</li>
             <li><strong>Salt hasła:</strong> {{ user.salt }}</li>
         </ul>
-        <a href="{{ url_for('delete',user_id=user.id) }}">Usuń Konto</a>
+        <a href="{{ url_for('delete_account')}}">Usuń Konto</a>
         <br>
-        <a href="{{ url_for('change',user_id=user.id) }}">Zmień login lub email lub hasło</a>
+        <a href="{{ url_for('change_credentials')}}">Zmień login lub email lub hasło</a>
     {% else %}
         <p> Nie ma żadnych informacji, prawdopodobnie coś poszło nie tak.</p>
     {% endif %}

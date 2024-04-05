@@ -5,7 +5,7 @@
   <form action="{{ url_for('change', user_id=user_id) }}" method="post">
     {{ form.csrf_token }}
     <div class="col">
-      <h1>Zmień poświadczenia konta</h1>
+      <h1>Te poświadczenia których nie chcesz zmieniać zostaw puste. By potwierdzić tożsamość wprowadź swoje obecne hasło.</h1>
       <br>
       <div class="row">
         Login
@@ -14,10 +14,6 @@
       <div class="row">
         Hasło
         {{ form.password(class="form-control", type="password") }}
-      </div>
-      <div class="row">
-        Powtórz Hasło
-        {{ form.confirm_password(class="form-control", type="password") }}
       </div>
       <div class="row">
         Email
