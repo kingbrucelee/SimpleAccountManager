@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container-fluid">
+  <form action="{{ url_for('delete_account') }}" method="post">
+    {{ form.csrf_token }}
+    <p>By potwierdzić usunięcie konta wpisz swoje hasło.</p>
+    <div class="col">
+      <div class="row">
+        Hasło
+        {{ form.password(class="form-control", type="password") }}
+      </div>
+      <div class="row">
+        {{ form.submit(class="btn btn-danger") }}
+        <a href="{{ url_for('account') }}" class="btn btn-primary">Anuluj</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
