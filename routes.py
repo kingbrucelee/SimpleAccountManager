@@ -1,11 +1,12 @@
 from app import app, db
-from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,abort
+from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
 from models import User
 import forms
 import secrets
 from pyargon2 import hash
 from functools import wraps
 import flask
+import os # For getting the enviromental variable
 
 # Teoretycznie można od razu też (if user) dać wraz z lookupem w bazie
 # index.html już nie będzie potrzebny
@@ -19,6 +20,16 @@ def login_required(f):
             return redirect(url_for("login"))
     return wrapper
 
+def admin(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if request.cookies.get('admin')==os.environ.get('DATABASE_KEY', 'obraz_szklanka_szafa'):
+            return(f(*args, **kwargs))
+        else:
+            flash("You are not in sudoers file. This incident will be reported")
+            return redirect(url_for("account"))
+    return wrapper
+
 @app.route('/')
 @app.route("/account")
 @login_required
@@ -30,10 +41,11 @@ def account():
         session.clear()
         return redirect(url_for("login"))
 
-@app.route('/admin')
-def admin():
+@app.route('/admin_panel')
+@admin
+def admin_panel():
     users = User.query.all() 
-    return render_template("admin.html", users=users)
+    return render_template("admin_panel.html", users=users)
 
 
 @app.route("/login", methods=["GET","POST"])
@@ -64,6 +76,7 @@ def create():
     return render_template("create.html", form=form)
 
 @app.route("/change/<int:user_id>", methods=["GET","POST"]) # Admin Change
+@admin
 def change(user_id):
     user = User.query.get(user_id)
     form = forms.ChangeAccountForm()
@@ -79,10 +92,10 @@ def change(user_id):
                 user.email = form.email.data
             db.session.commit()
             flash("Poświadczenia zostały zmienione")
-            return redirect(url_for("admin"))
+            return redirect(url_for("admin_panel"))
         return render_template("change.html",form=form, user_id=user_id)
     flash(f"Użytkownik o numerze {user_id} nie istnieje")
-    return redirect(url_for("admin"))
+    return redirect(url_for("admin_panel"))
 
 @app.route("/change_credentials", methods=["GET","POST"]) # User Change
 @login_required
@@ -112,6 +125,7 @@ def change_credentials():
         return redirect(url_for("login"))
 
 @app.route('/delete/<int:user_id>', methods=['GET', 'POST']) # Admin Delete
+@admin
 def delete(user_id):
     form = forms.RemoveAccountForm()
     user = User.query.get(user_id)
@@ -121,10 +135,10 @@ def delete(user_id):
                 db.session.delete(user)
                 db.session.commit()
                 flash('Konto zostało usunięte')
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin_panel'))
         return render_template('delete.html', form=form, user_id=user_id, login=user.login)
     flash(f"Użytkownik o numerze {user_id} nie istnieje")
-    return redirect(url_for('admin'))
+    return redirect(url_for('admin_panel'))
 
 @app.route('/delete_account', methods=['GET',"POST"]) # User Delete
 @login_required
