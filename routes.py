@@ -20,16 +20,6 @@ def login_required(f):
             return redirect(url_for("login"))
     return wrapper
 
-def admin(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if request.cookies.get('admin')==os.environ.get('DATABASE_KEY', 'obraz_szklanka_szafa'):
-            return(f(*args, **kwargs))
-        else:
-            flash("You are not in sudoers file. This incident will be reported")
-            return redirect(url_for("account"))
-    return wrapper
-
 @app.route('/')
 @app.route("/account")
 @login_required
@@ -40,27 +30,6 @@ def account():
     else:
         session.clear()
         return redirect(url_for("login"))
-
-@app.route('/admin_panel')
-@admin
-def admin_panel():
-    users = User.query.all() 
-    return render_template("admin_panel.html", users=users)
-
-
-@app.route("/login", methods=["GET","POST"])
-def login():
-    form = forms.LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(login=form.login.data).first()
-        if user:
-            password_entered = hash(form.password.data,user.salt)
-            if password_entered == user.password:
-                session["user_id"] = user.id
-                flash("Zalogowano pomyślnie", "success")
-                return redirect(url_for("account"))
-        flash("Błędny login lub hasło", "error")
-    return render_template("login.html", form=form)
 
 @app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create():
@@ -74,28 +43,6 @@ def create():
         session["user_id"] = user.id
         return redirect(url_for("account"))
     return render_template("create.html", form=form)
-
-@app.route("/change/<int:user_id>", methods=["GET","POST"]) # Admin Change
-@admin
-def change(user_id):
-    user = User.query.get(user_id)
-    form = forms.ChangeAccountForm()
-    if user:
-        if form.validate_on_submit():
-            if form.login.data:
-                user.login = form.login.data
-            if form.password.data:
-                salt = secrets.token_urlsafe(64)
-                user.password = hash(form.password.data,salt)    
-                user.salt = salt
-            if form.email.data:
-                user.email = form.email.data
-            db.session.commit()
-            flash("Poświadczenia zostały zmienione")
-            return redirect(url_for("admin_panel"))
-        return render_template("change.html",form=form, user_id=user_id)
-    flash(f"Użytkownik o numerze {user_id} nie istnieje")
-    return redirect(url_for("admin_panel"))
 
 @app.route("/change_credentials", methods=["GET","POST"]) # User Change
 @login_required
@@ -124,22 +71,6 @@ def change_credentials():
         session.clear()
         return redirect(url_for("login"))
 
-@app.route('/delete/<int:user_id>', methods=['GET', 'POST']) # Admin Delete
-@admin
-def delete(user_id):
-    form = forms.RemoveAccountForm()
-    user = User.query.get(user_id)
-    if user:
-        if form.validate_on_submit():
-            if form.submit.data:
-                db.session.delete(user)
-                db.session.commit()
-                flash('Konto zostało usunięte')
-            return redirect(url_for('admin_panel'))
-        return render_template('delete.html', form=form, user_id=user_id, login=user.login)
-    flash(f"Użytkownik o numerze {user_id} nie istnieje")
-    return redirect(url_for('admin_panel'))
-
 @app.route('/delete_account', methods=['GET',"POST"]) # User Delete
 @login_required
 def delete_account():
@@ -160,3 +91,85 @@ def delete_account():
     else:
         session.clear()
         return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET","POST"])
+def login():
+    form = forms.LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(login=form.login.data).first()
+        if user:
+            password_entered = hash(form.password.data,user.salt)
+            if password_entered == user.password:
+                session["user_id"] = user.id
+                flash("Zalogowano pomyślnie", "success")
+                return redirect(url_for("account"))
+        flash("Błędny login lub hasło", "error")
+    return render_template("login.html", form=form)
+
+### Teacher Routes Below
+def teacher(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        # Check whether is_teacher true 
+        if 2==2:
+            return(f(*args, **kwargs))
+        else:
+            flash("Nie jesteś nauczycielem","error")
+            return redirect(url_for("account"))
+    return wrapper
+
+### Admin Routes Below
+
+def admin(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if request.cookies.get('admin')==os.environ.get('DATABASE_KEY', 'obraz_szklanka_szafa'):
+            return(f(*args, **kwargs))
+        else:
+            flash("You are not in sudoers file. This incident will be reported")
+            return redirect(url_for("account"))
+    return wrapper
+
+@app.route('/admin_panel')
+@admin
+def admin_panel():
+    users = User.query.all() 
+    return render_template("admin_panel.html", users=users)
+
+@app.route("/change/<int:user_id>", methods=["GET","POST"]) # Admin Change
+@admin
+def change(user_id):
+    user = User.query.get(user_id)
+    form = forms.ChangeAccountForm()
+    if user:
+        if form.validate_on_submit():
+            if form.login.data:
+                user.login = form.login.data
+            if form.password.data:
+                salt = secrets.token_urlsafe(64)
+                user.password = hash(form.password.data,salt)    
+                user.salt = salt
+            if form.email.data:
+                user.email = form.email.data
+            db.session.commit()
+            flash("Poświadczenia zostały zmienione")
+            return redirect(url_for("admin_panel"))
+        return render_template("change.html",form=form, user_id=user_id)
+    flash(f"Użytkownik o numerze {user_id} nie istnieje")
+    return redirect(url_for("admin_panel"))
+
+@app.route('/delete/<int:user_id>', methods=['GET', 'POST']) # Admin Delete
+@admin
+def delete(user_id):
+    form = forms.RemoveAccountForm()
+    user = User.query.get(user_id)
+    if user:
+        if form.validate_on_submit():
+            if form.submit.data:
+                db.session.delete(user)
+                db.session.commit()
+                flash('Konto zostało usunięte')
+            return redirect(url_for('admin_panel'))
+        return render_template('delete.html', form=form, user_id=user_id, login=user.login)
+    flash(f"Użytkownik o numerze {user_id} nie istnieje")
+    return redirect(url_for('admin_panel'))
