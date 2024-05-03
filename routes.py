@@ -70,7 +70,7 @@ def change_credentials():
     else:
         session.clear()
         return redirect(url_for("login"))
-
+    return render_template("change_credentials.html", form=form)
 @app.route('/delete_account', methods=['GET',"POST"]) # User Delete
 @login_required
 def delete_account():
