@@ -2,12 +2,12 @@ from app import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    login = db.Column(db.String(64), nullable=False)
+    login = db.Column(db.String(64), nullable=False,unique=True)
     password = db.Column(db.String(64), nullable=False)
     salt = db.Column(db.String(64), nullable=False)
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
-    email = db.Column(db.String(128))
+    email = db.Column(db.String(128), unique=True)
     is_teacher = db.Column(db.Boolean)
 
     def __repr__(self):

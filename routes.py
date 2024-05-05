@@ -8,13 +8,16 @@ from functools import wraps
 import flask
 import os # For getting the enviromental variable
 
-# Teoretycznie można od razu też (if user) dać wraz z lookupem w bazie
-# index.html już nie będzie potrzebny
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if "user_id" in flask.session:
-            return(f(*args, **kwargs))
+            user = User.query.get(session["user_id"])
+            if user:
+                return(f(user,*args, **kwargs))
+            else:
+                session.clear()
+                return redirect(url_for("login"))
         else:
             flash("Nie jesteś zalogowany, zaloguj się lub utwórz konto","error")
             return redirect(url_for("login"))
@@ -23,19 +26,18 @@ def login_required(f):
 @app.route('/')
 @app.route("/account")
 @login_required
-def account():
-    user = User.query.get(session['user_id'])
-    if user:
-        return render_template("account.html", user=user)
-    else:
-        session.clear()
-        return redirect(url_for("login"))
+def account(user):
+    return render_template("account.html", user=user)
 
 @app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create():
     form = forms.AddAccountForm()
     if form.validate_on_submit():
         salt = secrets.token_urlsafe(64)
+        check = User.query.filter_by(login=form.login.data).first()
+        if check:
+            flash("Nazwa użytkownika jest zajęta") 
+            return render_template("create.html",form=form)   
         user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data)
         db.session.add(user)
         db.session.commit()
@@ -46,51 +48,50 @@ def create():
 
 @app.route("/change_credentials", methods=["GET","POST"]) # User Change
 @login_required
-def change_credentials():
-    user = User.query.get(session["user_id"])
+def change_credentials(user):
     form = forms.ChangeAccountCredentialsForm()
-    if user:
-        if form.validate_on_submit():
-            password_entered = hash(form.old_password.data,user.salt)
-            if password_entered == user.password:
-                if form.login.data:
-                    user.login = form.login.data
-                if form.password.data:
-                    salt = secrets.token_urlsafe(64)
-                    user.password = hash(form.password.data,salt)    
-                    user.salt = salt
-                if form.email.data:
-                    user.email = form.email.data
+    if form.validate_on_submit():
+        password_entered = hash(form.old_password.data,user.salt)
+        if password_entered == user.password:
+            if form.login.data:
+                check = User.query.filter_by(login=form.login.data).first()
+                if check:
+                    flash("Nazwa użytkownika jest zajęta") 
+                    return render_template("change_credentials.html",form=form)   
+                user.login = form.login.data
+            if form.email.data:
+                check = User.query.filter_by(login=form.login.data).first()
+                if check:
+                    flash("Email był już wykorzystany przy tworzeniu konta.")
+                    db.session.rollback() 
+                    return render_template("change_credentials.html",form=form)           
+                user.email = form.email.data    
+            if form.password.data:
+                salt = secrets.token_urlsafe(64)
+                user.password = hash(form.password.data,salt)    
+                user.salt = salt
                 db.session.commit()
                 flash("Poświadczenia zostały zmienione")
                 return redirect(url_for("account"))
             flash("Błędne stare hasło")
-        else:
-            return render_template("change_credentials.html", form=form)
     else:
-        session.clear()
-        return redirect(url_for("login"))
+        return render_template("change_credentials.html", form=form)
     return render_template("change_credentials.html", form=form)
 @app.route('/delete_account', methods=['GET',"POST"]) # User Delete
 @login_required
-def delete_account():
+def delete_account(user):
     form = forms.VerifyActionForm()
-    user = User.query.get(session["user_id"])
-    if user:
-        if form.validate_on_submit():
-            password_entered = hash(form.password.data,user.salt)
-            if password_entered == user.password:
-                db.session.delete(user)
-                db.session.commit()
-                flash('Konto zostało usunięte')
-                return redirect(url_for("login"))
-            else:
-                flash("Błędne hasło")
+    if form.validate_on_submit():
+        password_entered = hash(form.password.data,user.salt)
+        if password_entered == user.password:
+            db.session.delete(user)
+            db.session.commit()
+            flash('Konto zostało usunięte')
+            return redirect(url_for("login"))
         else:
-            return render_template("delete_account.html", form=form)
+            flash("Błędne hasło")
     else:
-        session.clear()
-        return redirect(url_for("login"))
+        return render_template("delete_account.html", form=form)
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -144,12 +145,21 @@ def change(user_id):
     if user:
         if form.validate_on_submit():
             if form.login.data:
+                check = User.query.filter_by(login=form.login.data).first()
+                if check:
+                    flash("Nazwa użytkownika jest zajęta") 
+                    return render_template("change.html",form=form,user_id=user_id)          
                 user.login = form.login.data
             if form.password.data:
                 salt = secrets.token_urlsafe(64)
                 user.password = hash(form.password.data,salt)    
                 user.salt = salt
             if form.email.data:
+                check = User.query.filter_by(email=form.email.data).first()
+                if check:
+                    flash("Email był już wykorzystany przy tworzeniu konta.")
+                    db.session.rollback()
+                    return render_template("change.html",form=form, user_id=user_id)   
                 user.email = form.email.data
             db.session.commit()
             flash("Poświadczenia zostały zmienione")
