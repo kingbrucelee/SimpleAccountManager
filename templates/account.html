@@ -17,5 +17,16 @@
     {% else %}
         <p> Nie ma żadnych informacji, prawdopodobnie coś poszło nie tak.</p>
     {% endif %}
+    <div class="container mt-5">
+        <h2>Moje Kursy</h2>
+        <div class="list-group">
+            {% for course in courses %}
+                <a href="#" class="list-group-item list-group-item-action">
+                    <h5 class="mb-1">{{ course.name }}</h5>
+                    <p class="mb-1">Instructor: {{ course.instructor }}</p>
+                </a>
+            {% endfor %}
+        </div>
+        </div>
 </div>
 {% endblock %}

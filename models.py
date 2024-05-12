@@ -9,7 +9,7 @@ class User(db.Model):
     surname = db.Column(db.String(64))
     email = db.Column(db.String(128), unique=True)
     is_teacher = db.Column(db.Boolean)
-
+    courses = db.relationship('Course', secondary='enrollment', back_populates='students')
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -17,6 +17,7 @@ class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128))
     description = db.Column(db.Text)
+    students = db.relationship('User', secondary='enrollment', back_populates='courses')
 
     def __repr__(self):
         return f"<Course {self.name}>"
@@ -37,6 +38,8 @@ class Task(db.Model):
 class Enrollment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)
+    user = db.relationship(User, backref=db.backref("enrollment", cascade="all, delete-orphan"))
+    course = db.relationship(Course, backref=db.backref("enrollment", cascade="all, delete-orphan"))
 
 class Permission(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
@@ -50,3 +53,7 @@ class Grade(db.Model):
 
     def __repr__(self):
         return f"<Grade {self.id}>"
+
+
+
+

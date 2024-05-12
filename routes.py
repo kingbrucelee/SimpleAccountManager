@@ -27,7 +27,8 @@ def login_required(f):
 @app.route("/account")
 @login_required
 def account(user):
-    return render_template("account.html", user=user)
+    user_courses = user.courses
+    return render_template("account.html", user=user, courses=user_courses)
 
 @app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create():
