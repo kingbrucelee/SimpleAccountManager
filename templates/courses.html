@@ -23,8 +23,8 @@
                         {{ course.description }}
                     </div>
                     <div class="modal-footer">
-                        <a href="#" class="btn btn-primary">Dołącz</a>
-                        <a href="#" class="btn btn-secondary">Anuluj</a>
+                        <a href="{{ url_for('join_course', course_id=course.id) }}" class="btn btn-primary">Dołącz</a>
+                        <a data-bs-dismiss="modal" class="btn btn-secondary">Anuluj</a>
                     </div>
                 </div>
             </div>

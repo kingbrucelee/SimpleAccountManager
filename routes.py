@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User, Course
+from models import User, Course, Enrollment
 import forms
 import secrets
 from pyargon2 import hash
@@ -29,11 +29,13 @@ def login_required(f):
 def account(user):
     user_courses = user.courses
     return render_template("account.html", user=user, courses=user_courses)
-@app.route("/courses")
-def get_courses():
+@app.route("/courses", methods=["GET","POST"])
+@login_required
+def get_courses(user):
     courses= Course.query.all()
     course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
-    return render_template("courses.html",courses=course_data)
+
+    return render_template("courses.html",courses=course_data,user=user)
 
 @app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create():
@@ -112,7 +114,20 @@ def login():
                 return redirect(url_for("account"))
         flash("Błędny login lub hasło", "error")
     return render_template("login.html", form=form)
-
+### Courses Routes Below
+@app.route('/join_course/<int:course_id>')
+@login_required
+def join_course(user,course_id):
+    enrollment = Enrollment(user_id = user.id,course_id= course_id )
+    existing_enrollment = Enrollment.query.filter_by(user_id=user.id, course_id=course_id).first()
+    if existing_enrollment:
+        flash("Jesteś już zapisany na ten kurs.")
+        return redirect(url_for('get_courses'))
+    else:
+        db.session.add(enrollment)
+        db.session.commit()
+        flash("Zapisano")
+        return redirect(url_for('get_courses'))
 ### Teacher Routes Below
 def teacher(f):
     @wraps(f)
