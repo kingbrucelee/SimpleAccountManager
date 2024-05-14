@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container mt-5">
+    <h2>Kursy</h2>
+    <div class="list-group">
+        {% for course in courses %}
+        <!-- Trigger/Open The Modal -->
+        <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#courseModal{{ course.id }}">
+            <h5 class="mb-1">{{ course.name }}</h5>
+            <p class="mb-1">Opis: {{ course.description }}</p>
+        </button>
+
+        <!-- The Modal -->
+        <div class="modal fade" id="courseModal{{ course.id }}" tabindex="-1" aria-labelledby="courseModalLabel{{ course.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="courseModalLabel{{ course.id }}">{{ course.name }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {{ course.description }}
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn btn-primary">Dołącz</a>
+                        <a href="#" class="btn btn-secondary">Anuluj</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User
+from models import User, Course
 import forms
 import secrets
 from pyargon2 import hash
@@ -29,6 +29,11 @@ def login_required(f):
 def account(user):
     user_courses = user.courses
     return render_template("account.html", user=user, courses=user_courses)
+@app.route("/courses")
+def get_courses():
+    courses= Course.query.all()
+    course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
+    return render_template("courses.html",courses=course_data)
 
 @app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create():
