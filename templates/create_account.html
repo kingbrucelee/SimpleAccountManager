@@ -2,7 +2,7 @@
 
 {% block main %}
 <div class="container-fluid">
-  <form action="{{ url_for('create') }}" method="post">
+  <form action="{{ url_for('create_account') }}" method="post">
     {{ form.csrf_token }}
     <div class="col">
       <h1>Utwórz Konto</h1>

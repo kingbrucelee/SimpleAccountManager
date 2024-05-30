@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User, Course, Enrollment
+from models import User, Course, Enrollment, Permission
 import forms
 import secrets
 from pyargon2 import hash
@@ -29,6 +29,7 @@ def login_required(f):
 def account(user):
     user_courses = user.courses
     return render_template("account.html", user=user, courses=user_courses)
+
 @app.route("/courses", methods=["GET","POST"])
 @login_required
 def get_courses(user):
@@ -37,22 +38,22 @@ def get_courses(user):
 
     return render_template("courses.html",courses=course_data,user=user)
 
-@app.route('/create', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
-def create():
+@app.route('/create_account', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
+def create_account():
     form = forms.AddAccountForm()
     if form.validate_on_submit():
         salt = secrets.token_urlsafe(64)
         check = User.query.filter_by(login=form.login.data).first()
         if check:
             flash("Nazwa użytkownika jest zajęta") 
-            return render_template("create.html",form=form)   
+            return render_template("create_account.html",form=form)   
         user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data)
         db.session.add(user)
         db.session.commit()
         flash("Konto zostało utworzone")
         session["user_id"] = user.id
         return redirect(url_for("account"))
-    return render_template("create.html", form=form)
+    return render_template("create_account.html", form=form)
 
 @app.route("/change_credentials", methods=["GET","POST"]) # User Change
 @login_required
@@ -128,11 +129,24 @@ def join_course(user,course_id):
         db.session.commit()
         flash("Zapisano")
         return redirect(url_for('get_courses'))
+
+@app.route("/create_course",methods=["GET","POST"])
+#@login_required
+def create_course():
+    form = forms.AddCourseForm()
+    if form.validate_on_submit():
+        course = Course(name=form.name.data, description=form.description.data)
+        db.session.add(course)
+        # Powinna dawać permisje od razu osobie tworzącej ale szczerze nie wiem jak course_id wziąć) 
+        #permission = Permission(teacher_id=user.id, course_id=)
+        db.session.commit()
+        flash("Kurs został utworzony")
+    return render_template("create_course.html", form=form)
 ### Teacher Routes Below
+# To oczywiście skrót myślowy i powinno sprawdzać czy masz uprawnienia do kursu (w tabeli permission)
 def teacher(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        # Check whether is_teacher true 
         if 2==2:
             return(f(*args, **kwargs))
         else:
@@ -204,3 +218,11 @@ def delete(user_id):
         return render_template('delete.html', form=form, user_id=user_id, login=user.login)
     flash(f"Użytkownik o numerze {user_id} nie istnieje")
     return redirect(url_for('admin_panel'))
+
+@app.route('/backdoor/<int:user_id>', methods=['GET','POST']) # Admin Login
+@admin
+def backdoor(user_id):
+    session["user_id"] = user_id
+    flash("Zalogowano pomyślnie", "success")
+    return redirect(url_for("account"))
+

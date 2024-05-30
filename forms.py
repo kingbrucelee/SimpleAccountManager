@@ -9,13 +9,15 @@ class AddAccountForm(FlaskForm): # User Create
     email = StringField("Email", validators=[Email("Proszę wprowadzić poprawny adres email"),Length(max=128, message="Email nie może mieć więcej niż 128 znaków")])
     submit = SubmitField("Wyślij")
 
+class AddCourseForm(FlaskForm):
+    name = StringField("Name", validators=[Length(min=3, max=64, message="Nazwa Kursu powinna mieć pomiędzy 3 a 64 znaków")])
+    description = StringField("Login", validators=[Optional(),Length(min=3, max=256, message="Opis powinien mieć pomiędzy 3 a 256 znaków")])
+    submit = SubmitField("Wyślij")
+
 class AuthorizeTeacherForm(FlaskForm):
     pass
 
 class EnrollStudentForm(FlaskForm):
-    pass
-
-class AddCourseForm(FlaskForm):
     pass
 
 class AddTaskForm(FlaskForm):

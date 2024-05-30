@@ -8,7 +8,7 @@
         <p>Salt hasła to {{ user.salt }} </p>
         <a href="{{ url_for('change', user_id=user.id) }}" class="btn btn-primary">Zmień</a>
         <a href="{{ url_for('delete', user_id=user.id) }}" class="btn btn-danger">Usuń</a>
-        <!-- <a href="{{ url_for('login', user_id=user.id) }}" class="btn btn-success">Zaloguj się</a> --->
+        <a href="{{ url_for('backdoor', user_id=user.id) }}" class="btn btn-success">Zaloguj się</a>
       </div>
     </div>
   {% endfor %}

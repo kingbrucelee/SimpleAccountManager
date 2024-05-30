@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container-fluid">
+  <form action="{{ url_for('create_course') }}" method="post">
+    {{ form.csrf_token }}
+    <div class="col">
+      <h1>Utwórz Kurs</h1>
+      <br>
+      <div class="row">
+        Nazwa
+        {{ form.name(class="form-control") }}
+      </div>
+      <div class="row">
+        Opis
+        {{ form.description(class="form-control") }}
+      </div>
+      <!-- Żeby to było pełnoprawne powinna być opcja dodania współprowadzącego ale to by wymagało zapewne poważnej restrukryzacji na którą wątpię że ktokolwiek ma czas, chęci czy możliwości -->
+      <div class="row">
+        {{ form.submit(class="btn btn-primary") }}
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
