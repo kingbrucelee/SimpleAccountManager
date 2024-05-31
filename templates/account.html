@@ -11,6 +11,7 @@
             <li><strong>Email:</strong> {{ user.email }}</li>
             <li><strong>Salt hasła:</strong> {{ user.salt }}</li>
         </ul> -->
+    
         <a href="{{ url_for('delete_account')}}">Usuń Konto</a>
         <br>
         <a href="{{ url_for('change_credentials')}}">Zmień login lub email lub hasło</a>
@@ -18,43 +19,44 @@
     {% else %}
         <p> Nie ma żadnych informacji, prawdopodobnie coś poszło nie tak.</p>
     {% endif %}
-    <div class="row">
 
-    <div class="col">
-    <div class="container mt-5">
-        <h2>Uczeń</h2>
-        <!-- Nie wiem czy w takiej formie ale zostawiam by pamiętać od czego zacząć-->
-        <!-- <a href="{{ url_for('leave_course')}}">Opuść Kurs</a> -->
-        <div class="list-group">
-            {% for course in courses %}
-                <a href="" class="list-group-item list-group-item-action">
-                    <h5 class="mb-1">{{ course.name }}</h5>
-                    <!-- W bazie nie ma żadnego pola o nazwie instructor. Niech osoba która to robiła to naprawi albo powie że to ja się mylę -->
-                    <p class="mb-1">Instructor: {{ course.instructor }}</p>
-                </a>
-            {% endfor %}
+    <div class="row">
+        {% if user.is_teacher == 0 %}
+        <div class="col">
+            <div class="container mt-5">
+                <h2>Uczeń</h2>
+                    <!-- Nie wiem czy w takiej formie ale zostawiam by pamiętać od czego zacząć-->
+                    <div class="list-group">
+                        {% for course in courses %}
+                        <a href="" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">{{ course.name }}</h5>
+                        <p class="mb-1">Description: {{ course.description }}</p>
+                        </a>
+                         {% endfor %}
+                    </div>
+             </div>
+
         </div>
-    </div>
-    </div>
 <!-- Najlepiej to wgl najpierw sprawdzić czy użytkownik jest gdziekolwiek nauczycielem -->
 <!-- Jeśli nie to druga belka mogła by być z zadaniami które ma do oddania -->
-    <div class="col">
-    <div class="container mt-5">
-        <h2>Nauczyciel</h2>
-        <a href="{{ url_for('create_course')}}">Stwórz Kurs</a>
-        <div class="list-group">
-            {% for course in courses %}
-            <!-- Tu powinien być warunek jakiś typu if teacher_id = user_id czy coś nie wiem -->
-                <a href="" class="list-group-item list-group-item-action">
-                    <h5 class="mb-1">{{ course.name }}</h5>
+        {% else %}
+            <div class="col">
+                <div class="container mt-5">
+                    <h2>Nauczyciel</h2>
+                    <a href="{{ url_for('create_course')}}">Stwórz Kurs</a>
+                    <div class="list-group">
+                        {% for course in courses %}
+                    <!-- Tu powinien być warunek jakiś typu if teacher_id = user_id czy coś nie wiem -->
+                            <a href="" class="list-group-item list-group-item-action">
+                            <h5 class="mb-1">{{ course.name }}</h5>
                     <!-- A tu odnośnik do add_task (które też trzeba stworzyć)-->
                     <!-- <p class="mb-1">Instructor: {{ course.instructor }}</p> -->
-                </a>
-            {% endfor %}
-        </div>
-    </div>
-    </div>
-
+                         </a>
+                    {% endfor %}
+                    </div>
+             </div>
+         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

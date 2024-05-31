@@ -115,6 +115,12 @@ def login():
                 return redirect(url_for("account"))
         flash("Błędny login lub hasło", "error")
     return render_template("login.html", form=form)
+@app.route('/logout')
+@login_required
+def logout(user):
+    session.clear()
+    flash("Zostałeś wylogowany", "success")
+    return redirect(url_for('login'))
 ### Courses Routes Below
 @app.route('/join_course/<int:course_id>')
 @login_required
@@ -153,6 +159,7 @@ def teacher(f):
             flash("Nie jesteś nauczycielem","error")
             return redirect(url_for("account"))
     return wrapper
+
 
 ### Admin Routes Below
 
