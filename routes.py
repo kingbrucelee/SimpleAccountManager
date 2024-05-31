@@ -27,8 +27,12 @@ def login_required(f):
 @app.route("/account")
 @login_required
 def account(user):
+    coursesT = 0
+    if user.is_teacher:
+        coursesT = Course.query.join(Permission, (Permission.course_id == Course.id)).filter(
+            Permission.teacher_id == user.id).all()
     user_courses = user.courses
-    return render_template("account.html", user=user, courses=user_courses)
+    return render_template("account.html", user=user, courses=user_courses, coursesT=coursesT)
 
 @app.route("/courses", methods=["GET","POST"])
 @login_required
