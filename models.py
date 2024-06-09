@@ -18,6 +18,7 @@ class Course(db.Model):
     name = db.Column(db.String(128))
     description = db.Column(db.Text)
     students = db.relationship('User', secondary='enrollment', back_populates='courses')
+    tasks = db.relationship('Task', backref='course', lazy='dynamic')
 
     def __repr__(self):
         return f"<Course {self.name}>"

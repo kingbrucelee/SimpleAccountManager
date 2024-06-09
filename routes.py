@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User, Course, Enrollment, Permission
+from models import User, Course, Enrollment, Permission, Task
 import forms
 import secrets
 from pyargon2 import hash
@@ -152,6 +152,21 @@ def create_course():
         db.session.commit()
         flash("Kurs został utworzony")
     return render_template("create_course.html", form=form)
+
+@app.route('/course/<int:course_id>')
+@login_required
+def view_course(user, course_id):
+    course = Course.query.get(course_id)
+    if not course:
+        flash("Kurs nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+
+    tasks = Task.query.filter_by(course_id=course_id).all()
+    enrolled_users = Enrollment.query.filter_by(course_id=course_id).all()
+    enrolled_user_ids = [enrollment.user_id for enrollment in enrolled_users]
+    is_user_enrolled = user.id in enrolled_user_ids
+
+    return render_template("course.html", course=course, tasks=tasks, user=user, is_user_enrolled=is_user_enrolled)
 ### Teacher Routes Below
 # To oczywiście skrót myślowy i powinno sprawdzać czy masz uprawnienia do kursu (w tabeli permission)
 def teacher(f):
