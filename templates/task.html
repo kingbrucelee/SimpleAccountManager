@@ -9,23 +9,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <title>{{ course.name }}</title>
-    <style>
-      .task-row {
-        border: 1px solid #dee2e6;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 5px;
-        transition: background-color 0.2s;
-      }
-      .task-row:hover {
-        background-color: #f8f9fa;
-      }
-      .task-row a {
-        text-decoration: none;
-        color: inherit;
-      }
-    </style>
+    <title>{{ task.name }}</title>
   </head>
   <body>
     <div class="container-fluid">
@@ -38,28 +22,8 @@
       </nav>
       <br>
       <div class="container">
-        <h1>{{ course.name }}</h1>
-        <p>{{ course.description }}</p>
-
-        {% if is_user_enrolled %}
-          <h2>Zadania</h2>
-          <div class="list-group">
-            {% for task in tasks %}
-              <div class="task-row">
-                <a href="{{ url_for('task', task_id=task.id) }}">
-                  <h3>{{ task.name }}</h3>
-                  <p>{{ task.description }}</p>
-                  {% if task.due_date %}
-                    <p>Data ukończenia: {{ task.due_date }}</p>
-                  {% endif %}
-                </a>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p>Nie jesteś zapisany na ten kurs.</p>
-          <a href="{{ url_for('join_course', course_id=course.id) }}" class="btn btn-primary">Dołącz do kursu</a>
-        {% endif %}
+        <h1>{{ task.name }}</h1>
+        <p>{{ task.description }}</p>
       </div>
       <br>
       {% with messages = get_flashed_messages() %}

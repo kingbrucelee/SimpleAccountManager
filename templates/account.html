@@ -32,7 +32,7 @@
                     <!-- Nie wiem czy w takiej formie ale zostawiam by pamiętać od czego zacząć-->
                     <div class="list-group">
                         {% for course in courses %}
-                        <a href="" class="list-group-item list-group-item-action">
+                        <a href="{{ url_for('view_course',course_id=course.id)}}" class="list-group-item list-group-item-action">
                         <h5 class="mb-1">{{ course.name }}</h5>
                         <p class="mb-1">Opis: {{ course.description }}</p>
                         </a>
@@ -50,7 +50,7 @@
                     <a href="{{ url_for('create_course')}}">Stwórz Kurs</a>
                     <div class="list-group">
                         {% for course in coursesT %}
-                            <a href="" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('view_course',course_id=course.id)}}" class="list-group-item list-group-item-action">
                             <h5 class="mb-1">{{ course.name }}</h5>
                     <!-- A tu odnośnik do add_task (które też trzeba stworzyć)-->
                     <!-- <p class="mb-1">Instructor: {{ course.instructor }}</p> -->
