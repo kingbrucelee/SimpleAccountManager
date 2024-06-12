@@ -55,7 +55,7 @@ def create_account():
         if check:
             flash("Nazwa użytkownika jest zajęta") 
             return render_template("create_account.html",form=form)   
-        user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data)
+        user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data, is_teacher=form.teacher)
         db.session.add(user)
         db.session.commit()
         flash("Konto zostało utworzone")
@@ -87,10 +87,11 @@ def change_credentials(user):
                 salt = secrets.token_urlsafe(64)
                 user.password = hash(form.password.data,salt)    
                 user.salt = salt
-                db.session.commit()
-                flash("Poświadczenia zostały zmienione")
-                return redirect(url_for("account"))
-            flash("Błędne stare hasło")
+            user.is_teacher=form.teacher
+            db.session.commit()
+            flash("Poświadczenia zostały zmienione")
+            return redirect(url_for("account"))
+        flash("Błędne stare hasło")
     else:
         return render_template("change_credentials.html", form=form)
     return render_template("change_credentials.html", form=form)
@@ -145,14 +146,15 @@ def join_course(user,course_id):
         return redirect(url_for('get_courses'))
 
 @app.route("/create_course",methods=["GET","POST"])
-#@login_required
-def create_course():
+@login_required
+def create_course(user):
     form = forms.AddCourseForm()
     if form.validate_on_submit():
         course = Course(name=form.name.data, description=form.description.data)
         db.session.add(course)
         # Powinna dawać permisje od razu osobie tworzącej ale szczerze nie wiem jak course_id wziąć) 
-        #permission = Permission(teacher_id=user.id, course_id=)
+        permission = Permission(teacher_id=user.id, course_id=course.id)
+        db.session.add(permission)
         db.session.commit()
         flash("Kurs został utworzony")
     return render_template("create_course.html", form=form)

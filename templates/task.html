@@ -1,40 +1,17 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% extends "base.html" %}
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <title>{{ task.name }}</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <ul class="navbar-nav">
-          <li class="nav-item"><a href="{{ url_for('get_courses') }}" class="nav-link">Przeglądaj kursy</a></li>
-          <li class="nav-item"><a href="{{ url_for('account') }}" class="nav-link">Strona główna</a></li>
-          <li class="nav-item"><a href="{{ url_for('logout') }}" class="nav-link">Wyloguj się</a></li>
-        </ul>
-      </nav>
-      <br>
-      <div class="container">
-        <h1>{{ task.name }}</h1>
-        <p>{{ task.description }}</p>
-      </div>
-      <br>
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          {% for message in messages %}
-          <div class="alert alert-primary">
-            {{ message }}
-          </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-    </div>
-  </body>
-</html>
+{% block main %}
+<div class="container">
+    <h1>{{ task.name }}</h1>
+    <p>{{ task.description }}</p>
+    Zadanie otworzy się
+    <!-- Można jakoś sprawdzać czy większe od dzisiejszej daty jeśli tak to nie wyświetać ---> 
+    <p>{{task.start_date}} </p>
+    <!-- Wyświetlać na czerwono gdy 24h do końca --->
+    Termin upływa  
+    <p>{{task.finish_date }}</p>
+    Liczba Punktów do zdobycia
+    <p>{{task.max_points }}</p>
+    <!-- No i na koniec to albo odnośnik albo od razu tu ocenę jeśli jest -->
+  </div>
+{% endblock %}
