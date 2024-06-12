@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField
+from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.validators import Email, InputRequired, EqualTo, Length, Optional
 
 class AddAccountForm(FlaskForm): # User Create
@@ -7,6 +7,7 @@ class AddAccountForm(FlaskForm): # User Create
     password = PasswordField("Password", validators=[Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków"), EqualTo('confirm_password', message='Pola hasło i powtórz hasło nie są identyczne')])
     confirm_password = PasswordField("Powtórz hasło")
     email = StringField("Email", validators=[Email("Proszę wprowadzić poprawny adres email"),Length(max=128, message="Email nie może mieć więcej niż 128 znaków")])
+    teacher = BooleanField("Teacher")
     submit = SubmitField("Wyślij")
 
 class AddCourseForm(FlaskForm):

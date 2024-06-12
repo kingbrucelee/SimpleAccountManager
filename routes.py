@@ -55,7 +55,7 @@ def create_account():
         if check:
             flash("Nazwa użytkownika jest zajęta") 
             return render_template("create_account.html",form=form)   
-        user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data, is_teacher=form.teacher)
+        user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data, is_teacher=form.teacher.data)
         db.session.add(user)
         db.session.commit()
         flash("Konto zostało utworzone")
@@ -152,6 +152,7 @@ def create_course(user):
     if form.validate_on_submit():
         course = Course(name=form.name.data, description=form.description.data)
         db.session.add(course)
+        db.session.flush()
         # Powinna dawać permisje od razu osobie tworzącej ale szczerze nie wiem jak course_id wziąć) 
         permission = Permission(teacher_id=user.id, course_id=course.id)
         db.session.add(permission)

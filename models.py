@@ -8,7 +8,7 @@ class User(db.Model):
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
     email = db.Column(db.String(128), unique=True)
-    is_teacher = db.Column(db.Boolean, default=0)
+    is_teacher = db.Column(db.Boolean, default=False)
     courses = db.relationship('Course', secondary='enrollment', back_populates='students')
     def __repr__(self):
         return f"<User {self.username}>"
