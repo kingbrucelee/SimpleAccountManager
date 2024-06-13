@@ -87,7 +87,7 @@ def change_credentials(user):
                 salt = secrets.token_urlsafe(64)
                 user.password = hash(form.password.data,salt)    
                 user.salt = salt
-            user.is_teacher=form.teacher
+            user.is_teacher=form.teacher.data
             db.session.commit()
             flash("Poświadczenia zostały zmienione")
             return redirect(url_for("account"))
@@ -158,6 +158,7 @@ def create_course(user):
         db.session.add(permission)
         db.session.commit()
         flash("Kurs został utworzony")
+        join_course(course.id)
     return render_template("create_course.html", form=form)
 
 @app.route('/course/<int:course_id>')

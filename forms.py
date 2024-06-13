@@ -32,6 +32,7 @@ class ChangeAccountCredentialsForm(FlaskForm): # User Change
     password = PasswordField("Password", validators=[Optional(),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
     email = StringField("Email", validators=[Optional(),Length(max=128, message="Email nie może mieć więcej niż 128 znaków"),Email("Proszę wprowadzić poprawny adres email")])
     old_password = PasswordField("Password", validators=[InputRequired("Stare hasło musi zostać wpisane by potwierdzić akcję"),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
+    teacher = BooleanField("Is Teacher")
     submit = SubmitField("Wyślij")
 
 class DeleteCourseForm(FlaskForm):
