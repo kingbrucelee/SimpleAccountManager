@@ -138,7 +138,7 @@ def join_course(user,course_id):
     existing_enrollment = Enrollment.query.filter_by(user_id=user.id, course_id=course_id).first()
     if existing_enrollment:
         flash("Jesteś już zapisany na ten kurs.")
-        return redirect(url_for('get_courses'))
+        return redirect(f"/course/{course_id}")
     else:
         db.session.add(enrollment)
         db.session.commit()
