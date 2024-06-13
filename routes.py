@@ -173,8 +173,27 @@ def view_course(user, course_id):
     enrolled_users = Enrollment.query.filter_by(course_id=course_id).all()
     enrolled_user_ids = [enrollment.user_id for enrollment in enrolled_users]
     is_user_enrolled = user.id in enrolled_user_ids
+    is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
+    return render_template("course.html", course=course, tasks=tasks, user=user, is_user_enrolled=is_user_enrolled, is_teacher=is_teacher)
 
-    return render_template("course.html", course=course, tasks=tasks, user=user, is_user_enrolled=is_user_enrolled)
+@app.route('/delete_course/<int:course_id>', methods=['POST'])
+@login_required
+def delete_course(user, course_id):
+    course = Course.query.get(course_id)
+    if not course:
+        flash("Kurs nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
+
+    if not permission:
+        flash("Nie możesz usunąć kursu.", "error")
+        return redirect(url_for('view_course', course_id=course.id))
+
+    db.session.delete(course)
+    db.session.commit()
+    flash("Kurs usunięto", "success")
+    return redirect(url_for('get_courses'))
+
 ### Teacher Routes Below
 # To oczywiście skrót myślowy i powinno sprawdzać czy masz uprawnienia do kursu (w tabeli permission)
 def teacher(f):
