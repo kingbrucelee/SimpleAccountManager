@@ -36,6 +36,19 @@ class Task(db.Model):
     def __repr__(self):
         return f"<Task {self.name}>"
 
+class TaskResponse(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(1000))
+    submitted_at = db.Column(db.String(64))
+    task_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer)
+
+    # task = relationship('Task', backref='responses')
+    # user = relationship('User', backref='task_responses')
+
+    def __repr__(self):
+        return f"<TaskResponse {self.id}>"
+
 class Enrollment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)

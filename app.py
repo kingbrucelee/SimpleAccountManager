@@ -13,6 +13,6 @@ from routes import *
 if __name__ == '__main__':
     with app.app_context(): # If there's no data.db create one
         db.create_all()
-    http_server = WSGIServer(('', 20852), app)
-    http_server.serve_forever()
-    #app.run(debug=True, host="0.0.0.0", port=20852)
+    #http_server = WSGIServer(('', 20852), app)
+    #http_server.serve_forever()
+    app.run(debug=True, host="0.0.0.0", port=20852)

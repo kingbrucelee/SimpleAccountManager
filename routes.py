@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User, Course, Enrollment, Permission, Task
+from models import User, Course, Enrollment, Permission, Task, TaskResponse
 import forms
 import secrets
 from pyargon2 import hash
@@ -41,11 +41,11 @@ def get_courses(user):
     course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
 
     return render_template("courses.html",courses=course_data,user=user)
-@app.route('/task/<int:task_id>')
-@login_required
-def task(user, task_id):
-    task = Task.query.get_or_404(task_id)
-    return render_template('task.html', task=task,user=user)
+# @app.route('/task/<int:task_id>')
+# @login_required
+# def task(user, task_id):
+#     task = Task.query.get_or_404(task_id)
+#     return render_template('task.html', task=task,user=user)
 @app.route('/create_account', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create_account():
     form = forms.AddAccountForm()
@@ -193,6 +193,68 @@ def delete_course(user, course_id):
     db.session.commit()
     flash("Kurs usunięto", "success")
     return redirect(url_for('get_courses'))
+
+@app.route('/create_task/<int:course_id>', methods=['GET', 'POST'])
+@login_required
+def create_task(user, course_id):
+    course = Course.query.get(course_id)
+    if not course:
+        flash("Kurs nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
+
+    if not permission:
+        flash("Nie masz uprawnień by dodawać zadania.", "error")
+        return redirect(url_for('view_course', course_id=course.id))
+
+    form = forms.AddTaskForm()
+    if form.validate_on_submit():
+        task = Task( course_id=course.id,name=form.name.data, description=form.description.data, finish_date=form.due_date.data)
+        db.session.add(task)
+        db.session.commit()
+        flash("Utworzono zadanie.", "success")
+        return redirect(url_for('view_course', course_id=course.id))
+    
+    return render_template("create_task.html", form=form, course=course)
+
+
+@app.route('/task/<int:task_id>', methods=['GET', 'POST'])
+@login_required
+def task(user, task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        flash("Zadanie nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+    course = task.course
+    form = forms.TaskResponseForm()
+    if form.validate_on_submit():
+        response = TaskResponse(content=form.content.data, task_id=task.id, user_id=user.id)
+        db.session.add(response)
+        db.session.commit()
+        flash("Wysłano zadanie.", "success")
+        return redirect(url_for('task', task_id=task.id))
+
+    is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
+    return render_template("task.html", task=task, form=form, is_teacher=is_teacher)
+
+@app.route('/submit_response/<int:task_id>', methods=['POST'])
+@login_required
+def submit_response(user, task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        flash("Zadanie nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+    form = forms.TaskResponseForm()
+    if form.validate_on_submit():
+        response = TaskResponse(content=form.content.data, task_id=task.id, user_id=user.id)
+        db.session.add(response)
+        db.session.commit()
+        flash("Your response has been submitted.", "success")
+    else:
+        flash("Failed to submit response.", "error")
+    return redirect(url_for('task', task_id=task.id))
+
+
 
 ### Teacher Routes Below
 # To oczywiście skrót myślowy i powinno sprawdzać czy masz uprawnienia do kursu (w tabeli permission)
