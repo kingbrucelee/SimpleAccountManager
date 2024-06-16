@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
-from models import User, Course, Enrollment, Permission, Task, TaskResponse
+from models import User, Course, Enrollment, Permission, Task, TaskResponse, Grade
 import forms
 import secrets
 from pyargon2 import hash
@@ -41,20 +41,19 @@ def get_courses(user):
     course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
 
     return render_template("courses.html",courses=course_data,user=user)
-# @app.route('/task/<int:task_id>')
-# @login_required
-# def task(user, task_id):
-#     task = Task.query.get_or_404(task_id)
-#     return render_template('task.html', task=task,user=user)
+
 @app.route('/create_account', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create_account():
     form = forms.AddAccountForm()
     if form.validate_on_submit():
         salt = secrets.token_urlsafe(64)
-        check = User.query.filter_by(login=form.login.data).first()
-        if check:
+        if User.query.filter_by(login=form.login.data).first():
             flash("Nazwa użytkownika jest zajęta") 
-            return render_template("create_account.html",form=form)   
+            return render_template("create_account.html",form=form)
+        if User.query.filter_by(login=form.email.data).first():
+            flash("Email był już wykorzystany")
+            return render_template("create_account.html",form=form)
+        
         user = User(login=form.login.data, password=hash(form.password.data,salt), salt=salt, email=form.email.data, is_teacher=form.teacher.data)
         db.session.add(user)
         db.session.commit()
@@ -74,14 +73,14 @@ def change_credentials(user):
                 check = User.query.filter_by(login=form.login.data).first()
                 if check:
                     flash("Nazwa użytkownika jest zajęta") 
-                    return render_template("change_credentials.html",form=form)   
+                    return render_template("change_credentials.html",form=form, user=user)   
                 user.login = form.login.data
             if form.email.data:
-                check = User.query.filter_by(login=form.login.data).first()
+                check = User.query.filter_by(login=form.email.data).first()
                 if check:
                     flash("Email był już wykorzystany przy tworzeniu konta.")
                     db.session.rollback() 
-                    return render_template("change_credentials.html",form=form)           
+                    return render_template("change_credentials.html",form=form, user=user)           
                 user.email = form.email.data    
             if form.password.data:
                 salt = secrets.token_urlsafe(64)
@@ -93,15 +92,22 @@ def change_credentials(user):
             return redirect(url_for("account"))
         flash("Błędne stare hasło")
     else:
-        return render_template("change_credentials.html", form=form)
-    return render_template("change_credentials.html", form=form)
+        return render_template("change_credentials.html", form=form, user=user)
+    return render_template("change_credentials.html", form=form, user=user)
 @app.route('/delete_account', methods=['GET',"POST"]) # User Delete
 @login_required
 def delete_account(user):
+    # Aktualnie nie usuwa odpowiedzi na zadania i ocen   
     form = forms.VerifyActionForm()
     if form.validate_on_submit():
         password_entered = hash(form.password.data,user.salt)
         if password_entered == user.password:
+            permissions = Permission.query.filter_by(teacher_id=user.id).all()
+            enrollments = Enrollment.query.filter_by(user_id=user.id).all()            
+            for permission in permissions:
+                db.session.delete(permission)
+            for enrollment in enrollments:
+                db.session.delete(enrollment)
             db.session.delete(user)
             db.session.commit()
             flash('Konto zostało usunięte')
@@ -134,12 +140,12 @@ def logout(user):
 @app.route('/join_course/<int:course_id>')
 @login_required
 def join_course(user,course_id):
-    enrollment = Enrollment(user_id = user.id,course_id= course_id )
     existing_enrollment = Enrollment.query.filter_by(user_id=user.id, course_id=course_id).first()
     if existing_enrollment:
         flash("Jesteś już zapisany na ten kurs.")
         return redirect(f"/course/{course_id}")
     else:
+        enrollment = Enrollment(user_id = user.id,course_id= course_id )
         db.session.add(enrollment)
         db.session.commit()
         flash("Zapisano")
@@ -152,14 +158,13 @@ def create_course(user):
     if form.validate_on_submit():
         course = Course(name=form.name.data, description=form.description.data)
         db.session.add(course)
-        db.session.flush()
-        # Powinna dawać permisje od razu osobie tworzącej ale szczerze nie wiem jak course_id wziąć) 
+        #db.session.flush() # Redundant       
         permission = Permission(teacher_id=user.id, course_id=course.id)
         db.session.add(permission)
         db.session.commit()
         flash("Kurs został utworzony")
         join_course(course.id)
-    return render_template("create_course.html", form=form)
+    return render_template("create_course.html", form=form, user=user)
 
 @app.route('/course/<int:course_id>')
 @login_required
@@ -183,13 +188,28 @@ def delete_course(user, course_id):
     if not course:
         flash("Kurs nie istnieje", "error")
         return redirect(url_for('get_courses'))
-    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
-
+    
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()    
     if not permission:
         flash("Nie możesz usunąć kursu.", "error")
         return redirect(url_for('view_course', course_id=course.id))
-
-    db.session.delete(course)
+    db.session.delete(permission)
+    
+    enrollments = Enrollment.query.filter_by(course_id=course.id)
+    for enrollment in enrollments:
+        db.session.delete(enrollment)
+    
+    tasks = Task.query.filter_by(course_id=course.id)
+    for task in tasks:
+        grades = Grade.query.filter_by(task_id=task.id)
+        responses = TaskResponse.query.filter_by(task_id=task.id)
+        for response in responses:
+            db.session.delete(response)
+        for grade in grades:            
+            db.session.delete(grade)
+        db.session.delete(task)
+    
+    db.session.delete(course)    
     db.session.commit()
     flash("Kurs usunięto", "success")
     return redirect(url_for('get_courses'))
@@ -235,7 +255,7 @@ def task(user, task_id):
         return redirect(url_for('task', task_id=task.id))
 
     is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
-    return render_template("task.html", task=task, form=form, is_teacher=is_teacher)
+    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
 
 @app.route('/submit_response/<int:task_id>', methods=['POST'])
 @login_required
@@ -311,6 +331,7 @@ def change(user_id):
                     db.session.rollback()
                     return render_template("change.html",form=form, user_id=user_id)   
                 user.email = form.email.data
+            user.teacher = form.teacher.data    
             db.session.commit()
             flash("Poświadczenia zostały zmienione")
             return redirect(url_for("admin_panel"))

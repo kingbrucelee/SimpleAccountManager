@@ -7,7 +7,7 @@ class AddAccountForm(FlaskForm): # User Create
     password = PasswordField("Password", validators=[Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków"), EqualTo('confirm_password', message='Pola hasło i powtórz hasło nie są identyczne')])
     confirm_password = PasswordField("Powtórz hasło")
     email = StringField("Email", validators=[Email("Proszę wprowadzić poprawny adres email"),Length(max=128, message="Email nie może mieć więcej niż 128 znaków")])
-    teacher = BooleanField("Teacher")
+    teacher = BooleanField('Jestem Nauczycielem')
     submit = SubmitField("Wyślij")
 
 class AddCourseForm(FlaskForm):
@@ -39,7 +39,7 @@ class ChangeAccountCredentialsForm(FlaskForm): # User Change
     password = PasswordField("Password", validators=[Optional(),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
     email = StringField("Email", validators=[Optional(),Length(max=128, message="Email nie może mieć więcej niż 128 znaków"),Email("Proszę wprowadzić poprawny adres email")])
     old_password = PasswordField("Password", validators=[InputRequired("Stare hasło musi zostać wpisane by potwierdzić akcję"),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
-    teacher = BooleanField("Is Teacher")
+    teacher = BooleanField('Jestem Nauczycielem')
     submit = SubmitField("Wyślij")
 
 class DeleteCourseForm(FlaskForm):
@@ -80,6 +80,7 @@ class ChangeAccountForm(FlaskForm): # Admin Change
     login = StringField("Login", validators=[Optional(),Length(min=3, max=64, message="Login powinien mieć pomiędzy 3 a 64 znaków")])
     password = PasswordField("Password", validators=[Optional(),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
     email = StringField("Email", validators=[Optional(),Length(max=128, message="Email nie może mieć więcej niż 128 znaków"),Email("Proszę wprowadzić poprawny adres email")])
+    teacher = BooleanField('Jestem Nauczycielem')
     submit = SubmitField("Wyślij")
 
 # Possible rename to "ClickToConfirmForm" to be more universal
