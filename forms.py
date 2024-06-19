@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, TextAreaField, DateTimeField
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, TextAreaField, DateTimeField, FileField
 from wtforms.validators import Email, InputRequired, EqualTo, Length, Optional
 
 class AddAccountForm(FlaskForm): # User Create
@@ -29,6 +29,7 @@ class AddTaskForm(FlaskForm):
 
 class TaskResponseForm(FlaskForm):
     content = TextAreaField('Response', validators=[Optional(),Length(min=10, message="Ilość znaków powinna być większa niż 10")])
+    file = FileField('Plik do przesłania')
     submit = SubmitField('Submit Response')
 
 class AddGradeForm(FlaskForm):

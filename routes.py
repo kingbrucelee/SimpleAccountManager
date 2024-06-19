@@ -3,11 +3,16 @@ from flask import render_template,redirect,url_for, flash, get_flashed_messages,
 from models import User, Course, Enrollment, Permission, Task, TaskResponse, Grade
 import forms
 import secrets
+from datetime import datetime
 from pyargon2 import hash
 from functools import wraps
 import flask
+import os
+from werkzeug.utils import secure_filename
 import os # For getting the enviromental variable
-
+UPLOAD_FOLDER = os.path.join(app.root_path, 'uploads')
+ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif','zip','rar'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -258,6 +263,9 @@ def task(user, task_id):
     if is_teacher:
         responses = TaskResponse.query.filter_by(task_id=task.id)
     return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
 @login_required
@@ -267,10 +275,30 @@ def submit_response(user, task_id):
     if not task:
         flash("Zadanie nie istnieje", "error")
         return redirect(url_for('get_courses'))
+
     form = forms.TaskResponseForm()
     print(f"==================================================={task.description}=========================================================================")
     if form.validate_on_submit():
-        response = TaskResponse(content=form.content.data, task_id=task.id, user_id=user.id)
+        file = form.file.data
+        filename = None
+        if file:
+            original_filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{timestamp}_{original_filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            try:
+                file.save(file_path)
+                flash("File uploaded successfully.", "success")
+            except Exception as e:
+                flash(f"Failed to save file. Error: {e}", "error")
+                return redirect(url_for('task', task_id=task.id))
+        response = TaskResponse(
+            content=form.content.data,
+            task_id=task.id,
+            user_id=user.id,
+            file_path=filename,
+            submitted_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        )
         db.session.add(response)
         db.session.commit()
         flash("Your response has been submitted.", "success")
