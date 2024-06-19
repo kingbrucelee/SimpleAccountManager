@@ -7,7 +7,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('DATABASE_KEY', 'obraz_szklanka_szafa')
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///data.db" # it means in folder named "instance"
 db = SQLAlchemy(app)
-
 from routes import *
 
 if __name__ == '__main__':

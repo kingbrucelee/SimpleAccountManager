@@ -40,6 +40,7 @@ class TaskResponse(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(1000))
     submitted_at = db.Column(db.String(64))
+    file_path = db.Column(db.String(255))
     task_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
 
