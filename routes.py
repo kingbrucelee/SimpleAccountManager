@@ -50,7 +50,7 @@ def create_account():
         if User.query.filter_by(login=form.login.data).first():
             flash("Nazwa użytkownika jest zajęta") 
             return render_template("create_account.html",form=form)
-        if User.query.filter_by(login=form.email.data).first():
+        if User.query.filter_by(email=form.email.data).first():
             flash("Email był już wykorzystany")
             return render_template("create_account.html",form=form)
         
@@ -76,7 +76,7 @@ def change_credentials(user):
                     return render_template("change_credentials.html",form=form, user=user)   
                 user.login = form.login.data
             if form.email.data:
-                check = User.query.filter_by(login=form.email.data).first()
+                check = User.query.filter_by(email=form.email.data).first()
                 if check:
                     flash("Email był już wykorzystany przy tworzeniu konta.")
                     db.session.rollback() 
@@ -158,7 +158,7 @@ def create_course(user):
     if form.validate_on_submit():
         course = Course(name=form.name.data, description=form.description.data)
         db.session.add(course)
-        #db.session.flush() # Redundant       
+        db.session.commit() # Redundant       
         permission = Permission(teacher_id=user.id, course_id=course.id)
         db.session.add(permission)
         db.session.commit()
@@ -255,16 +255,20 @@ def task(user, task_id):
         return redirect(url_for('task', task_id=task.id))
 
     is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
-    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
+    if is_teacher:
+        responses = TaskResponse.query.filter_by(task_id=task.id)
+    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
 
-@app.route('/submit_response/<int:task_id>', methods=['POST'])
+@app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
 @login_required
 def submit_response(user, task_id):
     task = Task.query.get(task_id)
+    print(f"==================================================={task.name}=========================================================================")
     if not task:
         flash("Zadanie nie istnieje", "error")
         return redirect(url_for('get_courses'))
     form = forms.TaskResponseForm()
+    print(f"==================================================={task.description}=========================================================================")
     if form.validate_on_submit():
         response = TaskResponse(content=form.content.data, task_id=task.id, user_id=user.id)
         db.session.add(response)
@@ -272,7 +276,8 @@ def submit_response(user, task_id):
         flash("Your response has been submitted.", "success")
     else:
         flash("Failed to submit response.", "error")
-    return redirect(url_for('task', task_id=task.id))
+    return render_template("submit_response.html", form=form)
+    #return redirect(url_for('task', task_id=task.id))
 
 
 
