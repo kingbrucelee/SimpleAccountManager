@@ -15,19 +15,13 @@
               <h5 class="card-title">{{ response.user_id }}</h5>
               <p class="card-text">{{ response.content }}</p>
               <li>
-                <p><strong>{{ response.user.login }}</strong>: {{ response.content }}</p>
-                {% if response.file_path %}
-                <p>Plik: <a href="{{ url_for('uploaded_file', filename=response.file_path) }}">{{ response.file_path }}</a></p>
-                {% endif %}
+                <p><strong>{{ response.user_login }}</strong>: {{ response.content }}</p>
                 <p>Data przesłania: {{ response.submitted_at }}</p>
                 <p>Ocena: {{ response.grade if response.grade is not none else "Nie oceniono" }}</p>
                 <a href="{{ url_for('grade_response', response_id=response.id) }}">Oceń</a>
               </li>
               <li>
                 <p><strong>{{ response.user_id }}</strong>: {{ response.content }}</p>
-                {% if response.file_path %}
-                <p>File: <a href="{{ url_for('uploaded_file', filename=response.file_path) }}">{{ response.file_path }}</a></p>
-                {% endif %}
               </li>
             </div>
           </div>

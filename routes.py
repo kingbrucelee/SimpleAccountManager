@@ -46,11 +46,6 @@ def get_courses(user):
     course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
 
     return render_template("courses.html",courses=course_data,user=user)
-@app.route('/task/<int:task_id>')
-@login_required
-def task(user, task_id):
-    task = Task.query.get_or_404(task_id)
-    return render_template('task.html', task=task,user=user)
 @app.route('/create_account', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create_account():
     form = forms.AddAccountForm()
@@ -309,7 +304,7 @@ def grade_response(user, response_id):
         flash("Odpowiedź nie istnieje", "error")
         return redirect(url_for('get_courses'))
     
-    course = response.task.course
+    #course = response.task.course
     permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
     
     if not permission:
