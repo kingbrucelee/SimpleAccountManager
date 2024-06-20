@@ -262,7 +262,8 @@ def task(user, task_id):
     is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
     if is_teacher:
         responses = TaskResponse.query.filter_by(task_id=task.id)
-    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
+        return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
+    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
