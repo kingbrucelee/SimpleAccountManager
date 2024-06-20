@@ -43,9 +43,10 @@ class TaskResponse(db.Model):
     file_path = db.Column(db.String(255))
     task_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
-
-    # task = relationship('Task', backref='responses')
-    # user = relationship('User', backref='task_responses')
+    grade = db.Column(db.Float)
+    
+    # task = db.relationship('Task', backref='responses')
+    # user = db.relationship('User', backref='task_responses')
 
     def __repr__(self):
         return f"<TaskResponse {self.id}>"

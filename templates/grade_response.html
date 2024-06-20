@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ocena zadania</h1>
+<p>Student: {{ response.user.login }}</p>
+<p>Treść odpowiedzi: {{ response.content }}</p>
+{% if response.file_path %}
+<p>Plik: <a href="{{ url_for('uploaded_file', filename=response.file_path) }}">{{ response.file_path }}</a></p>
+{% endif %}
+<p>Data przesłania: {{ response.submitted_at }}</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.grade.label }}<br>
+        {{ form.grade }}
+    </div>
+    <button type="submit">Zapisz ocenę</button>
+</form>
+{% endblock %}
