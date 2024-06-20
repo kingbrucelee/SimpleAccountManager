@@ -1,0 +1,8 @@
+flask
+Flask-SQLAlchemy
+gevent
+pyargon2
+Flask-WTF
+WTForms
+wtforms-validators
+email-validator

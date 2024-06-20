@@ -8,7 +8,7 @@ class User(db.Model):
     name = db.Column(db.String(64))
     surname = db.Column(db.String(64))
     email = db.Column(db.String(128), unique=True)
-    is_teacher = db.Column(db.Boolean, default=0)
+    is_teacher = db.Column(db.Boolean, default=False)
     courses = db.relationship('Course', secondary='enrollment', back_populates='students')
     def __repr__(self):
         return f"<User {self.username}>"
@@ -35,6 +35,20 @@ class Task(db.Model):
 
     def __repr__(self):
         return f"<Task {self.name}>"
+
+class TaskResponse(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(1000))
+    submitted_at = db.Column(db.String(64))
+    file_path = db.Column(db.String(255))
+    task_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer)
+
+    # task = relationship('Task', backref='responses')
+    # user = relationship('User', backref='task_responses')
+
+    def __repr__(self):
+        return f"<TaskResponse {self.id}>"
 
 class Enrollment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
