@@ -253,33 +253,6 @@ def task(user, task_id):
     course = task.course
     form = forms.TaskResponseForm()
     if form.validate_on_submit():
-        response = TaskResponse(content=form.content.data, task_id=task.id, user_id=user.id)
-        db.session.add(response)
-        db.session.commit()
-        flash("Wysłano zadanie.", "success")
-        return redirect(url_for('task', task_id=task.id))
-
-    is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
-    if is_teacher:
-        responses = TaskResponse.query.filter_by(task_id=task.id)
-        return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
-    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
-@login_required
-def submit_response(user, task_id):
-    task = Task.query.get(task_id)
-    print(f"==================================================={task.name}=========================================================================")
-    if not task:
-        flash("Zadanie nie istnieje", "error")
-        return redirect(url_for('get_courses'))
-
-    form = forms.TaskResponseForm()
-    print(f"==================================================={task.description}=========================================================================")
-    if form.validate_on_submit():
         file = form.file.data
         filename = None
         if file:
@@ -302,12 +275,57 @@ def submit_response(user, task_id):
         )
         db.session.add(response)
         db.session.commit()
-        flash("Your response has been submitted.", "success")
-    else:
-        flash("Failed to submit response.", "error")
-    return render_template("submit_response.html", form=form)
-    #return redirect(url_for('task', task_id=task.id))
+        flash("Wysłano zadanie.", "success")
+        return redirect(url_for('task', task_id=task.id))
 
+    is_teacher = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first() is not None
+    if is_teacher:
+        responses = TaskResponse.query.filter_by(task_id=task.id)
+        return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
+    return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+#@app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
+#@login_required
+#def submit_response(user, task_id):
+#    task = Task.query.get(task_id)
+#    print(f"==================================================={task.name}=========================================================================")
+#    if not task:
+#        flash("Zadanie nie istnieje", "error")
+#        return redirect(url_for('get_courses'))
+#
+#    form = forms.TaskResponseForm()
+#    print(f"==================================================={task.description}=========================================================================")
+#    if form.validate_on_submit():
+#        file = form.file.data
+#        filename = None
+#        if file:
+#            original_filename = secure_filename(file.filename)
+#            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+#            filename = f"{timestamp}_{original_filename}"
+#            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#            try:
+#                file.save(file_path)
+#                flash("File uploaded successfully.", "success")
+#            except Exception as e:
+#                flash(f"Failed to save file. Error: {e}", "error")
+#                return redirect(url_for('task', task_id=task.id))
+#        response = TaskResponse(
+#            content=form.content.data,
+#            task_id=task.id,
+#            user_id=user.id,
+#            file_path=filename,
+#            submitted_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#        )
+#        db.session.add(response)
+#        db.session.commit()
+#        flash("Your response has been submitted.", "success")
+#    else:
+#        flash("Failed to submit response.", "error")
+#    return render_template("submit_response.html", form=form)
+#    #return redirect(url_for('task', task_id=task.id))
 
 
 ### Teacher Routes Below

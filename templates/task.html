@@ -19,7 +19,7 @@
         {% endfor %}
       {% else %}
         <h2>Prześlij odpowiedź</h2>
-        <form method="POST" action="{{ url_for('submit_response', task_id=task.id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('task', task_id=task.id) }}" enctype="multipart/form-data">
           {{ form.hidden_tag() }}
           <div class="form-group">
             {{ form.content.label(class="form-label") }}
