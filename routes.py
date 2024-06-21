@@ -1,5 +1,5 @@
 from app import app, db
-from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request
+from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request,send_from_directory
 from models import User, Course, Enrollment, Permission, Task, TaskResponse, Grade
 import forms
 import secrets
@@ -46,7 +46,6 @@ def get_courses(user):
     course_data = [{'id': course.id, 'name': course.name, 'description': course.description} for course in courses]
 
     return render_template("courses.html",courses=course_data,user=user)
-
 @app.route('/create_account', methods=["GET","POST"]) # Bulk account creation is cringe so there's no admin route of creation
 def create_account():
     form = forms.AddAccountForm()
@@ -246,13 +245,14 @@ def create_task(user, course_id):
 @app.route('/task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
 def task(user, task_id):
-    current_user = user
     task = Task.query.get(task_id)
     if not task:
         flash("Zadanie nie istnieje", "error")
         return redirect(url_for('get_courses'))
     course = task.course
     form = forms.TaskResponseForm()
+    response = TaskResponse.query.filter_by(task_id=task_id, user_id=user.id).first()
+    
     if form.validate_on_submit():
         file = form.file.data
         filename = None
@@ -267,14 +267,22 @@ def task(user, task_id):
             except Exception as e:
                 flash(f"Failed to save file. Error: {e}", "error")
                 return redirect(url_for('task', task_id=task.id))
-        response = TaskResponse(
-            content=form.content.data,
-            task_id=task.id,
-            user_id=user.id,
-            file_path=filename,
-            submitted_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        )
-        db.session.add(response)
+        
+        if response:
+            response.content = form.content.data
+            form.content.data = response.content
+            if filename:
+                response.file_path = filename
+            response.submitted_at = datetime.now()
+        else:
+            response = TaskResponse(
+                content=form.content.data,
+                task_id=task.id,
+                user_id=user.id,
+                file_path=filename,
+                submitted_at=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            )
+            db.session.add(response)
         db.session.commit()
         flash("Wysłano zadanie.", "success")
         return redirect(url_for('task', task_id=task.id))
@@ -287,6 +295,36 @@ def task(user, task_id):
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/grade_response/<int:response_id>', methods=['GET', 'POST'])
+@login_required
+def grade_response(user, response_id):
+    response = TaskResponse.query.get(response_id)
+    if not response:
+        flash("Odpowiedź nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+    
+    course = response.task.course
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
+    
+    if not permission:
+        flash("Nie masz uprawnień do oceniania tego zadania.", "error")
+        return redirect(url_for('view_course', course_id=course.id))
+    
+    form = forms.GradeForm()
+    if form.validate_on_submit():
+        response.grade = form.grade.data
+        try:
+            db.session.commit()
+            flash("Ocena została zapisana.", "success")
+        except IntegrityError:
+            db.session.rollback()
+            flash("Wystąpił błąd podczas zapisywania oceny.", "error")
+        return redirect(url_for('task', task_id=response.task_id))
+    
+    return render_template("grade_response.html", form=form, response=response, user=user)
+
+
 
 #@app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
 #@login_required

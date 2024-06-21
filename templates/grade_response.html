@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>Ocena zadania</h1>
+<p>Student: {{ response.user.login }}</p>
+<p>Treść odpowiedzi: {{ response.content }}</p>
+
+<p>Data przesłania: {{ response.submitted_at }}</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.grade.label }}<br>
+        {{ form.grade }}
+    </div>
+    <button type="submit">Zapisz ocenę</button>
+</form>
+{% endblock %}

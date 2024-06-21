@@ -43,10 +43,10 @@ class TaskResponse(db.Model):
     submitted_at = db.Column(db.String(64))
     file_path = db.Column(db.String(255))
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    
-    # task = relationship('Task', backref='responses')
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))    
+    task = db.relationship('Task', backref='responses')
     user = db.relationship('User', back_populates='responses')
+    grade = db.Column(db.Float)
 
     def __repr__(self):
         return f"<TaskResponse {self.id}>"

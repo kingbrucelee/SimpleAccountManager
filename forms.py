@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, TextAreaField, DateTimeField, FileField
-from wtforms.validators import Email, InputRequired, EqualTo, Length, Optional
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, TextAreaField, DateTimeField, FileField, FloatField 
+from wtforms.validators import Email, InputRequired, EqualTo, Length, Optional, NumberRange
 
 class AddAccountForm(FlaskForm): # User Create
     login = StringField("Login", validators=[Length(min=3, max=64, message="Login powinien mieć pomiędzy 3 a 64 znaków")])
@@ -32,9 +32,11 @@ class TaskResponseForm(FlaskForm):
     file = FileField('Plik do przesłania')
     submit = SubmitField('Submit Response')
 
-class AddGradeForm(FlaskForm):
-    pass
 
+class GradeForm(FlaskForm):
+    grade = FloatField('Ocena', validators=[Optional(), NumberRange(min=0, max=100)])
+    submit = SubmitField('Zapisz ocenę')
+    
 class ChangeAccountCredentialsForm(FlaskForm): # User Change
     login = StringField("Login", validators=[Optional(),Length(min=3, max=64, message="Login powinien mieć pomiędzy 3 a 64 znaków")])
     password = PasswordField("Password", validators=[Optional(),Length(min=8, max=64, message="Hasło powinno mieć pomiędzy 8 a 64 znaków")])
