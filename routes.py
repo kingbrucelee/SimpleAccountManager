@@ -245,7 +245,6 @@ def create_task(user, course_id):
 @app.route('/task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
 def task(user, task_id):
-    current_user = user
     task = Task.query.get(task_id)
     if not task:
         flash("Zadanie nie istnieje", "error")
@@ -305,7 +304,7 @@ def grade_response(user, response_id):
         flash("Odpowiedź nie istnieje", "error")
         return redirect(url_for('get_courses'))
     
-    #course = response.task.course
+    course = response.task.course
     permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
     
     if not permission:

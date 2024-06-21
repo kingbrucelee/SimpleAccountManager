@@ -44,7 +44,7 @@ class TaskResponse(db.Model):
     file_path = db.Column(db.String(255))
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))    
-    # task = relationship('Task', backref='responses')
+    task = db.relationship('Task', backref='responses')
     user = db.relationship('User', back_populates='responses')
     grade = db.Column(db.Float)
 
