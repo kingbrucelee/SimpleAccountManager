@@ -14,6 +14,15 @@
             <div class="card-body">
               <h5 class="card-title">{{ response.user }}</h5>
               <p class="card-text">{{ response.content }}</p>
+              <li>
+                <p><strong>{{ response.user_login }}</strong>: {{ response.content }}</p>
+                <p>Data przesłania: {{ response.submitted_at }}</p>
+                <p>Ocena: {{ response.grade if response.grade is not none else "Nie oceniono" }}</p>
+                <a href="{{ url_for('grade_response', response_id=response.id) }}">Oceń</a>
+              </li>
+              <li>
+                <p><strong>{{ response.user_id }}</strong>: {{ response.content }}</p>
+              </li>
             </div>
           </div>
         {% endfor %}
