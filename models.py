@@ -10,8 +10,9 @@ class User(db.Model):
     email = db.Column(db.String(128), unique=True)
     is_teacher = db.Column(db.Boolean, default=False)
     courses = db.relationship('Course', secondary='enrollment', back_populates='students')
+    responses = db.relationship('TaskResponse', back_populates='user', lazy='dynamic')
     def __repr__(self):
-        return f"<User {self.username}>"
+        return self.login
 
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,11 +42,11 @@ class TaskResponse(db.Model):
     content = db.Column(db.String(1000))
     submitted_at = db.Column(db.String(64))
     file_path = db.Column(db.String(255))
-    task_id = db.Column(db.Integer)
-    user_id = db.Column(db.Integer)
-
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
     # task = relationship('Task', backref='responses')
-    # user = relationship('User', backref='task_responses')
+    user = db.relationship('User', back_populates='responses')
 
     def __repr__(self):
         return f"<TaskResponse {self.id}>"

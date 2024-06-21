@@ -246,6 +246,7 @@ def create_task(user, course_id):
 @app.route('/task/<int:task_id>', methods=['GET', 'POST'])
 @login_required
 def task(user, task_id):
+    current_user = user
     task = Task.query.get(task_id)
     if not task:
         flash("Zadanie nie istnieje", "error")
