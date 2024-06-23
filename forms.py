@@ -32,7 +32,9 @@ class TaskResponseForm(FlaskForm):
     file = FileField('Plik do przesłania')
     submit = SubmitField('Submit Response')
 
-
+class AcceptEnrollmentForm(FlaskForm):
+    accept = SubmitField('Akceptuj')
+    reject = SubmitField('Odrzuć')
 class GradeForm(FlaskForm):
     grade = FloatField('Ocena', validators=[Optional(), NumberRange(min=0, max=100)])
     submit = SubmitField('Zapisz ocenę')

@@ -56,7 +56,11 @@ class Enrollment(db.Model):
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)
     user = db.relationship(User, backref=db.backref("enrollment", cascade="all, delete-orphan"))
     course = db.relationship(Course, backref=db.backref("enrollment", cascade="all, delete-orphan"))
-
+class EnrollmentToAccept(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)
+    user = db.relationship(User, backref=db.backref("pending_enrollment", cascade="all, delete-orphan"))
+    course = db.relationship(Course, backref=db.backref("pending_enrollment", cascade="all, delete-orphan"))
 class Permission(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), primary_key=True)

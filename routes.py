@@ -1,6 +1,6 @@
 from app import app, db
 from flask import render_template,redirect,url_for, flash, get_flashed_messages, session,request,send_from_directory
-from models import User, Course, Enrollment, Permission, Task, TaskResponse, Grade
+from models import User, Course, Enrollment, Permission, Task, TaskResponse, Grade, EnrollmentToAccept
 import forms
 import secrets
 from datetime import datetime
@@ -144,17 +144,24 @@ def logout(user):
 @app.route('/join_course/<int:course_id>')
 @login_required
 def join_course(user,course_id):
-    existing_enrollment = Enrollment.query.filter_by(user_id=user.id, course_id=course_id).first()
-    if existing_enrollment:
+    existing_enrollment = EnrollmentToAccept.query.filter_by(user_id=user.id, course_id=course_id).first()
+    existing_enrollment2 = Enrollment.query.filter_by(user_id=user.id, course_id=course_id).first()
+    if existing_enrollment or existing_enrollment2:
         flash("Jesteś już zapisany na ten kurs.")
         return redirect(f"/course/{course_id}")
     else:
-        enrollment = Enrollment(user_id = user.id,course_id= course_id )
+        enrollment = EnrollmentToAccept(user_id = user.id,course_id= course_id )
         db.session.add(enrollment)
         db.session.commit()
         flash("Zapisano")
         return redirect(url_for('get_courses'))
-
+@login_required
+def join_course_while_creating(user,course_id):
+    enrollment = Enrollment(user_id = user.id,course_id= course_id )
+    db.session.add(enrollment)
+    db.session.commit()
+    flash("Zapisano")
+    return redirect(url_for('get_courses'))
 @app.route("/create_course",methods=["GET","POST"])
 @login_required
 def create_course(user):
@@ -166,8 +173,8 @@ def create_course(user):
         permission = Permission(teacher_id=user.id, course_id=course.id)
         db.session.add(permission)
         db.session.commit()
+        join_course_while_creating(course.id)
         flash("Kurs został utworzony")
-        join_course(course.id)
     return render_template("create_course.html", form=form, user=user)
 
 @app.route('/course/<int:course_id>')
@@ -292,6 +299,76 @@ def task(user, task_id):
         responses = TaskResponse.query.filter_by(task_id=task.id)
         return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user, responses=responses)
     return render_template("task.html", task=task, form=form, is_teacher=is_teacher, user=user)
+
+
+@app.route('/course/<int:course_id>/manage_enrollment/<int:user_id>', methods=['POST'])
+@login_required
+def manage_enrollment(user, course_id, user_id):
+    course = Course.query.get(course_id)
+    if not course:
+        flash("Kurs nie istnieje", "error")
+        return redirect(url_for('get_courses'))
+
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
+    if not permission:
+        flash("Nie masz uprawnień do zarządzania tym kursem.", "error")
+        return redirect(url_for('view_course', course_id=course.id))
+
+    form = forms.form.AcceptEnrollmentForm()
+    if form.validate_on_submit():
+        pending_enrollment = EnrollmentToAccept.query.filter_by(course_id=course_id, user_id=user_id).first()
+        if form.accept.data:
+            enrollment = Enrollment(user_id=user_id, course_id=course_id)
+            db.session.add(enrollment)
+            db.session.delete(pending_enrollment)
+            db.session.commit()
+            flash("Zapisano użytkownika na kurs.", "success")
+        elif form.reject.data:
+            db.session.delete(pending_enrollment)
+            db.session.commit()
+            flash("Odrzucono prośbę o zapisanie na kurs.", "success")
+    return redirect(url_for('view_pending_enrollments', course_id=course_id))
+@app.route('/accept_enrollment/<int:user_id>/<int:course_id>', methods=['POST'])
+@login_required
+def accept_enrollment(user, user_id, course_id):
+    # Check if the user is a teacher for the course
+    permission = Permission.query.filter_by(course_id=course_id, teacher_id=user.id).first()
+    if not permission:
+        flash("Nie masz uprawnień do zarządzania zapisami na ten kurs.", "error")
+        return redirect(url_for('view_course', course_id=course_id))
+
+    # Move the user from EnrollmentToAccept to Enrollment
+    enrollment_to_accept = EnrollmentToAccept.query.filter_by(user_id=user_id, course_id=course_id).first()
+    if enrollment_to_accept:
+        enrollment = Enrollment(user_id=user_id, course_id=course_id)
+        db.session.add(enrollment)
+        db.session.delete(enrollment_to_accept)
+        db.session.commit()
+        flash('Zapis został zaakceptowany', 'success')
+    else:
+        flash('Nie znaleziono prośby o zapis', 'error')
+
+    return redirect(url_for('view_pending_enrollments', course_id=course_id))
+
+@app.route('/reject_enrollment/<int:user_id>/<int:course_id>', methods=['POST'])
+@login_required
+def reject_enrollment(user, user_id, course_id):
+    # Check if the user is a teacher for the course
+    permission = Permission.query.filter_by(course_id=course_id, teacher_id=user.id).first()
+    if not permission:
+        flash("Nie masz uprawnień do zarządzania zapisami na ten kurs.", "error")
+        return redirect(url_for('view_course', course_id=course_id))
+
+    # Remove the user from EnrollmentToAccept
+    enrollment_to_accept = EnrollmentToAccept.query.filter_by(user_id=user_id, course_id=course_id).first()
+    if enrollment_to_accept:
+        db.session.delete(enrollment_to_accept)
+        db.session.commit()
+        flash('Zapis został odrzucony', 'success')
+    else:
+        flash('Nie znaleziono prośby o zapis', 'error')
+
+    return redirect(url_for('view_pending_enrollments', course_id=course_id))
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'gif', 'zip', 'rar'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -324,7 +401,22 @@ def grade_response(user, response_id):
     
     return render_template("grade_response.html", form=form, response=response, user=user)
 
+@app.route('/course/<int:course_id>/pending_enrollments')
+@login_required
+def view_pending_enrollments(user, course_id):
+    course = Course.query.get(course_id)
+    if not course:
+        flash("Kurs nie istnieje", "error")
+        return redirect(url_for('get_courses'))
 
+    # Check if the user is a teacher for the course
+    permission = Permission.query.filter_by(course_id=course.id, teacher_id=user.id).first()
+    if not permission:
+        flash("Nie masz uprawnień do zarządzania zapisami na ten kurs.", "error")
+        return redirect(url_for('view_course', course_id=course_id))
+
+    pending_enrollments = EnrollmentToAccept.query.filter_by(course_id=course_id).all()
+    return render_template('pending_enrollments.html', user=user, course=course, pending_enrollments=pending_enrollments)
 
 #@app.route('/submit_response/<int:task_id>', methods=['GET','POST'])
 #@login_required

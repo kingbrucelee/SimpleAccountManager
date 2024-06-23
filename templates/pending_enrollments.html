@@ -1,10 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container-fluid">
+    <h1>Użytkownicy do akceptacji dla: {{ course.name }}</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Użytkownik</th>
+                <th scope="col">Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for enrollment in pending_enrollments %}
+            <tr>
+                <td>{{ enrollment.user.login }}</td>
+                <td class="text-right">
+                    <form action="{{ url_for('accept_enrollment', user_id=enrollment.user_id, course_id=course.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-success">Accept</button>
+                    </form>
+                    <form action="{{ url_for('reject_enrollment', user_id=enrollment.user_id, course_id=course.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
