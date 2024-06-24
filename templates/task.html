@@ -14,6 +14,9 @@
             <div class="card-body">
               <h5 class="card-title">{{ response.user }}</h5>
               <p class="card-text">{{ response.content }}</p>
+              {% if response.is_late %}
+              <p class="text-danger">Oddano po czasie</p>
+              {% endif %}
               <li>
                 <p><strong>{{ response.user_login }}</strong>: {{ response.content }}</p>
                 <p>Data przesłania: {{ response.submitted_at }}</p>

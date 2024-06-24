@@ -1,4 +1,5 @@
 from app import db
+from datetime import datetime
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,6 +51,18 @@ class TaskResponse(db.Model):
 
     def __repr__(self):
         return f"<TaskResponse {self.id}>"
+
+    @property
+    def is_late(self):
+        try:
+            submission_time = datetime.strptime(self.submitted_at, "%Y-%m-%d %H:%M:%S")
+            due_time = datetime.strptime(self.task.finish_date, "%Y-%m-%d %H:%M:%S")  
+            if submission_time > due_time:
+                return True
+        except Exception as e:
+            print(f"DEBUG: Error in is_late calculation: {e}")
+        return False
+
 
 class Enrollment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)

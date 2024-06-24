@@ -24,7 +24,7 @@ class EnrollStudentForm(FlaskForm):
 class AddTaskForm(FlaskForm):
     name = StringField('Task Name', validators=[Optional(),Length(min=3, max=64, message="Nazwa zafania powinna mieć pomiędzy 3 a 64 znaków")])
     description = TextAreaField('Task Description', validators=[Optional(),Length(min=10, message="Ilość znaków powinna być większa niż 10")])
-    due_date = DateTimeField('Due Date', format='%Y-%m-%d')
+    due_date = DateTimeField('Due Date', format='%Y-%m-%d %H:%M:%S')
     submit = SubmitField('Create Task')
 
 class TaskResponseForm(FlaskForm):
